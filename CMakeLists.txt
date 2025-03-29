@@ -5,4 +5,5 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(Assembler assembler.c
         file.c
-        error.c)
+        pre_proc.c
+)
