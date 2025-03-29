@@ -1,0 +1,2 @@
+
+#define FILENAME_EXTENSION ".as"

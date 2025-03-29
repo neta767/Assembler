@@ -1,3 +1,3 @@
-C:/Users/NetalyKlemann/CLionProjects/Assembler/cmake-build-debug/CMakeFiles/Assembler.dir
-C:/Users/NetalyKlemann/CLionProjects/Assembler/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/NetalyKlemann/CLionProjects/Assembler/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+C:/Users/NetalyKlemann/CLionProjects/assembler/cmake-build-debug/CMakeFiles/Assembler.dir
+C:/Users/NetalyKlemann/CLionProjects/assembler/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/NetalyKlemann/CLionProjects/assembler/cmake-build-debug/CMakeFiles/rebuild_cache.dir
