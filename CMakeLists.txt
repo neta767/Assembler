@@ -3,7 +3,7 @@ project(Assembler C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(Assembler assembler.c
+add_executable(Assembler main.c
         file.c
         pre_proc.c
 )

@@ -49,8 +49,8 @@ cmake_ninja_workdir = C$:/Users/NetalyKlemann/CLionProjects/assembler/cmake-buil
 
 build cmake_object_order_depends_target_Assembler: phony || .
 
-build CMakeFiles/Assembler.dir/assembler.c.obj: C_COMPILER__Assembler_unscanned_Debug C$:/Users/NetalyKlemann/CLionProjects/assembler/assembler.c || cmake_object_order_depends_target_Assembler
-  DEP_FILE = CMakeFiles\Assembler.dir\assembler.c.obj.d
+build CMakeFiles/Assembler.dir/main.c.obj: C_COMPILER__Assembler_unscanned_Debug C$:/Users/NetalyKlemann/CLionProjects/assembler/main.c || cmake_object_order_depends_target_Assembler
+  DEP_FILE = CMakeFiles\Assembler.dir\main.c.obj.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles\Assembler.dir
   OBJECT_FILE_DIR = CMakeFiles\Assembler.dir
@@ -75,7 +75,7 @@ build CMakeFiles/Assembler.dir/pre_proc.c.obj: C_COMPILER__Assembler_unscanned_D
 #############################################
 # Link the executable Assembler.exe
 
-build Assembler.exe: C_EXECUTABLE_LINKER__Assembler_Debug CMakeFiles/Assembler.dir/assembler.c.obj CMakeFiles/Assembler.dir/file.c.obj CMakeFiles/Assembler.dir/pre_proc.c.obj
+build Assembler.exe: C_EXECUTABLE_LINKER__Assembler_Debug CMakeFiles/Assembler.dir/main.c.obj CMakeFiles/Assembler.dir/file.c.obj CMakeFiles/Assembler.dir/pre_proc.c.obj
   FLAGS = -g
   LINK_LIBRARIES = -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\Assembler.dir
