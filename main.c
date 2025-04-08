@@ -9,8 +9,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	/* Scanning files */
-	while (--argc > 0) {
-		handle_file(argv[argc]);
+	for (int i = 1; i < argc; i++) {  /* Refactored: replaced while loop with clearer for loop */
+		if (handle_file(argv[i]) != 0) {
+			printf("Error processing file: %s\n", argv[i]);
+		}
 	}
+
 	return 0;
 }

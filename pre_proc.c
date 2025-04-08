@@ -1,76 +1,128 @@
 #include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
-#include "assembler.h"
-#include "macro.c"
+#include "file.h"
+#include "pre_proc.h"
+#include "macro.h"
 
-void remove_white_space(char *str) {
-    int i = 0, j = 0;
+int pre_proc(char *filename, FILE *source) {
+    char line[MAX_LINE_LEN];           /* Buffer for reading lines from the file */
+    char *output_name;                 /* Output file name with .am extension */
+    FILE *output;
+    int macro_start_line = 0;
+    int line_num = 0, in_macro = 0, has_errors = 0, i;
+    char start[MAX_NAME];
+    char name[MAX_NAME];
+    char *token;
+    Macro *m;
+	char *oldstr;
 
-    while (str[i]) {
-        if (!isspace((unsigned char)str[i])) {
-            str[j++] = str[i];
-        }
-        i++;
+    Macro *current_macro = NULL;   /* Pointer to the current macro being created */
+
+    /* Generate the .am output filename */
+    output_name = add_extension(filename, ".am");
+    if (!output_name) {
+        printf("Memory allocation failed for output filename.\n");
+        return 1;
     }
-    str[j] = '\0'; // Null-terminate the modified string
-}
 
-void add_macro() {
-
-}
-
-
-void handle_line(char *line,FILE *as_file_pointer, FILE *am_file_pointer, int i) {
-    int in_macro = 0;
-    char macro_name[MAX_LINE_LEN];
-    remove_white_space(line);
-
-    /* Check if the line is a macro declaration */
-    if(strncmp(line , "macr" , strlen("macr")) == 0){
-        sscanf(line, "macr %s", macro_name); // Extract macro name
-        add_macro(macro_name);
-        in_macro=1;
+    /* Open the output file for writing */
+    output = fopen(output_name, "w");
+    if (!output) {
+        printf("Could not open file %s for writing\n", output_name);
+        free(output_name);
+        return 1;
     }
-    else if(in_macro) {
-        add_macro_content(line);
-    }
-    /* Check if the line marks the end of a macro */
-    else if(strncmp(line , "endmacr" , strlen("endmacr")) == 0){
-        in_macro=0;
-    }
-    /* Check if the line calls an existing macro */
-    else if(find_macro(head , line)){
 
-    }
-    else {
-        fprintf(am_file_pointer, "%s", line);
-    }
-}
-
-int *pre_process(char *filename,FILE *as_file_pointer){
-    int i=0, line_length=0;
-    char line[MAX_LINE_LEN]; /* Buffer for reading lines from the file */
-    char *am_filename = add_extension(filename, ".am");
-    FILE *am_file_pointer =fopen(am_filename,"w");
-    if (!am_file_pointer) {
-        /* Check if file exist and readable */
-        printf("Could not open file %s\n",filename);
-        fclose(am_file_pointer);
-        free(filename);
-        return 0;
-    }
     /* Loop through each line in the file */
-    while (fgets(line, sizeof(line), as_file_pointer)) {
-        line_length = strlen(line);
+    while (fgets(line, sizeof(line), source)) {
+		oldstr=malloc(sizeof(line));
+        strcpy(oldstr,line);
+        line_num++;
+        /* Get first token (ignoring whitespace) */
+        token = strtok(line, " \t\n");
+		printf("hiiii  %s \n", line);
+        if (!token) continue;  /* Skip empty lines */
 
-        /* Validating line length */
-        if (line_length == MAX_LINE_LEN && line[MAX_LINE_LEN - 1] == '\n')
-            printf("line number %d in %s is too long\n", i, filename);
-        handle_line(line, as_file_pointer, am_file_pointer, i);
-        i++;
+        strcpy(start, token);
+
+        /* If inside a macro definition */
+        if (in_macro) {
+            if (strcmp(start, "mcroend") == 0) {
+                /* Check for extra tokens after endmcro */
+                if (strtok(NULL, " \t\n")) {
+                    fprintf(stderr, "Error on line %d: 'endmcro' should not contain extra tokens.\n", line_num);
+                    has_errors++;
+                    continue;
+                } else {
+                    in_macro = 0;
+                    add_macro(current_macro);
+                }
+            } else {
+                add_line_to_macro(current_macro, oldstr);
+            }
+            continue;
+        }
+
+        /* Start of a new macro */
+        if (strcmp(start, "mcro") == 0) {
+            token = strtok(NULL, " \t\n");
+            if (!token || strtok(NULL, " \t\n")) {
+                fprintf(stderr, "Error on line %d: Invalid macro declaration format.\n", line_num);
+                has_errors++;
+                continue;
+            }
+
+            strcpy(name, token);
+
+            if (!is_valid_macro_name(name)) {
+                fprintf(stderr, "Error on line %d: Invalid macro name '%s'.\n", line_num, name);
+                has_errors++;
+            } else if (is_reserved(name)) {
+                fprintf(stderr, "Error on line %d: Macro name '%s' is a reserved word.\n", line_num, name);
+                has_errors++;
+            }
+
+            /* Create new macro */
+            current_macro = malloc(sizeof(Macro));
+            if (!current_macro) {
+                fprintf(stderr, "Memory allocation failed for macro.\n");
+                has_errors++;
+                continue;
+            }
+
+            strcpy(current_macro->name, name);
+            current_macro->num_lines = 0;
+            current_macro->capacity = 10;
+            current_macro->lines = malloc(current_macro->capacity * sizeof(char *));
+            current_macro->next = NULL;
+
+            in_macro = 1;
+            macro_start_line = line_num;
+            continue;
+        }
+
+        /* Not inside macro: check if line is macro call */
+        m = find_macro(start);
+        if (m) {
+            printf("Macro '%s' found, expanding...\n", start);
+            /* If it's a macro call, expand it */
+            for (i = 0; i < m->num_lines; ++i) {
+                fputs(m->lines[i], output);  /* Insert macro content */
+            }
+        } else {
+            /* Copy original line */
+
+            fputs(oldstr, output);
+        }
     }
-    // Free allocated memory
+
+    /* Cleanup */
+    fclose(output);
+    free(output_name);
     free_macros();
 
-    return 0;
+    return 0; /* success */
 }

@@ -1,62 +1,72 @@
-#define MAX_LINE_LEN 82
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
-//MACRO_LIST *macroListHead = NULL;  // Head of the macro list
+#include "macro.h"
 
-/**
- * @brief Adds a macro to the macro list.
- */
-void add_macro(char *name) {
-    MACRO_LIST *newMacro = (MACRO_LIST *)malloc(sizeof(MACRO_LIST));
-    if (!newMacro) {
-        printf("Memory allocation failed for macro!\n");
-        exit(1);
+Macro *macro_list = NULL;
+
+const char *reserved_words[] = { "mov", "cmp", "add", "sub", "not", "clr", "lea", "inc", "dec", "jmp", "bne", "red",
+    "prn", "jsr", "rts", "stop", "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7", ".data", ".string", ".entry", ".extern" };
+
+int is_reserved(const char *name) {
+    int i;
+    for (i = 0; i < sizeof(reserved_words) / sizeof(reserved_words[0]); i++) {
+        if (strcmp(name, reserved_words[i]) == 0)
+            return 1;
     }
-    strcpy(newMacro->macro_name, name);
-    newMacro->head_content = NULL;
-    newMacro->next = macroListHead;
-    macroListHead = newMacro;
+    return 0;
 }
 
-/**
- * @brief Adds a line of content to the last stored macro.
- */
-void add_macro_content(char *line) {
-    if (!macroListHead) return;  // No macro exists yet
-
-    MACRO *newContent = (MACRO *)malloc(sizeof(MACRO));
-    if (!newContent) {
-        printf("Memory allocation failed for macro content!\n");
-        exit(1);
+Macro* find_macro(const char *name) {
+    Macro *curr = macro_list;
+    while (curr) {
+        if (strcmp(curr->name, name) == 0)
+            return curr;
+        curr = curr->next;
     }
-    strcpy(newContent->line, line);
-    newContent->next = NULL;
-
-    if (!macroListHead->head_content) {
-        macroListHead->head_content = newContent;
-    } else {
-        MACRO *temp = macroListHead->head_content;
-        while (temp->next) temp = temp->next;
-        temp->next = newContent;
-    }
+    return NULL;
 }
 
-/**
- * @brief Frees all allocated memory for macros.
- */
+void add_macro(Macro *macro) {
+    macro->next = macro_list;
+    macro_list = macro;
+}
+
+int is_valid_macro_name(const char *name) {
+    int i;
+    if (!isalpha(name[0]) && name[0] != '_')
+        return 0;
+    for (i = 1; name[i] != '\0'; i++) {
+        if (!isalnum(name[i]) && name[i] != '_')
+            return 0;
+    }
+    return strlen(name) <= MAX_NAME - 1;
+}
+
 void free_macros() {
-    MACRO_LIST *currentMacro = macroListHead;
-    while (currentMacro) {
-        MACRO *currentContent = currentMacro->head_content;
-        while (currentContent) {
-            MACRO *tempContent = currentContent;
-            currentContent = currentContent->next;
-            free(tempContent);
+    int i;
+    Macro *curr = macro_list;
+    Macro *temp;
+    while (curr) {
+        for (i = 0; i < curr->num_lines; i++) {
+            free(curr->lines[i]);
         }
-        MACRO_LIST *tempMacro = currentMacro;
-        currentMacro = currentMacro->next;
-        free(tempMacro);
+        free(curr->lines);
+        temp = curr;
+        curr = curr->next;
+        free(temp);
     }
+    macro_list = NULL;
+}
+
+void add_line_to_macro(Macro *macro, const char *line) {
+    if (macro->num_lines >= macro->capacity) {
+        macro->capacity *= 2;
+        macro->lines = realloc(macro->lines, macro->capacity * sizeof(char *));
+    }
+    macro->lines[macro->num_lines] = malloc(strlen(line) + 1);
+    strcpy(macro->lines[macro->num_lines], line);
+    macro->num_lines++;
 }
