@@ -1,19 +1,37 @@
-#include "file.h"
 #include <stdio.h>
 
-int main(int argc, char *argv[]) {
-	/* Validates the provided as a command-line argument. */
-	if (argc < 2) {
-		printf("No file provided to read\n");
-		return 0;
-	}
+#include "pre_proc.h"
+#include "util.h"
 
-	/* Scanning files */
-	for (int i = 1; i < argc; i++) {  /* Refactored: replaced while loop with clearer for loop */
-		if (handle_file(argv[i]) != 0) {
-			printf("Error processing file: %s\n", argv[i]);
+/**
+ * This program receives one or more file names as command-line arguments.
+ * Each file is expected to contain assembly code.
+ * The program performs preprocessing on each file (e.g., macro expansion).
+ *
+ * Assumptions:
+ * -
+ */
+
+/* Entry point for the assembler */
+int main(int argc, char *argv[]){
+	int i;
+
+	/* Process each file provided as argument */
+	for (i = 1; i < argc; i++) {
+		printf("Processing file: %s\n", argv[i]);
+
+		/* Preprocess the file */
+		if (pre_proc(argv[i])) {
+			printf("Preprocessing failed for file: %s\n", argv[i]);
+			continue;
 		}
+
+		/* Free any memory allocated globally (e.g., macros) */
+		free_all_memory();
+
+		/* TODO: Add first-pass and second-pass assembler logic here */
 	}
 
 	return 0;
-}
+  }
+
