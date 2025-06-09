@@ -33,9 +33,3 @@ ___
 Run the compiled program using the following command: `./assembler file_name_1 ... file_name_N`
 
 This will output machine code generated from the provided assembly file.
-
-And for Invalid output:
-
-<p align="center">
-  <img src="Readme_imgs/Invalid1.png" width="600">
-</p>
